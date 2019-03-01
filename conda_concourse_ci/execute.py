@@ -583,7 +583,7 @@ def submit(pipeline_file, base_name, pipeline_name, src_dir, config_root_dir,
     os.remove(key_file)
 
     # make sure we are logged in to the configured server
-    login_args = ['fly', '-t', 'conda-concourse-server', 'login',
+    login_args = ['fly', '-t', 'concourse', 'login',
                   '--concourse-url', data['concourse-url'],
                   '--team-name', data['concourse-team']]
     if 'concourse-username' in data:
@@ -595,18 +595,18 @@ def submit(pipeline_file, base_name, pipeline_name, src_dir, config_root_dir,
     subprocess.check_call(login_args)
 
     # sync (possibly update our client version)
-    subprocess.check_call('fly -t conda-concourse-server sync'.split())
+    subprocess.check_call('fly -t concourse sync'.split())
 
     # set the new pipeline details
-    subprocess.check_call(['fly', '-t', 'conda-concourse-server', 'sp',
+    subprocess.check_call(['fly', '-t', 'concourse', 'sp',
                            '-c', pipeline_file,
                            '-p', pipeline_name, '-n', '-l', config_path])
     # unpause the pipeline
-    subprocess.check_call(['fly', '-t', 'conda-concourse-server',
+    subprocess.check_call(['fly', '-t', 'concourse',
                            'up', '-p', pipeline_name])
 
     if public:
-        subprocess.check_call(['fly', '-t', 'conda-concourse-server',
+        subprocess.check_call(['fly', '-t', 'concourse',
                                'expose-pipeline', '-p', pipeline_name])
 
 
@@ -845,7 +845,7 @@ def submit_batch(
     config_path = os.path.expanduser(os.path.join(config_root_dir, 'config.yml'))
     with open(config_path) as src:
         data = yaml.load(src)
-    login_args = ['fly', '-t', 'conda-concourse-server', 'login',
+    login_args = ['fly', '-t', 'concourse', 'login',
                   '--concourse-url', data['concourse-url'],
                   '--team-name', data['concourse-team']]
     if 'concourse-username' in data:
@@ -931,7 +931,7 @@ def rm_pipeline(pipeline_names, config_root_dir, do_it_dammit=False, pass_throug
         data = yaml.load(src)
 
     # make sure we are logged in to the configured server
-    login_args = ['fly', '-t', 'conda-concourse-server', 'login',
+    login_args = ['fly', '-t', 'concourse', 'login',
                   '--concourse-url', data['concourse-url'],
                   '--team-name', data['concourse-team']]
     if 'concourse-username' in data:
@@ -943,9 +943,9 @@ def rm_pipeline(pipeline_names, config_root_dir, do_it_dammit=False, pass_throug
     subprocess.check_call(login_args)
 
     # sync (possibly update our client version)
-    subprocess.check_call('fly -t conda-concourse-server sync'.split())
+    subprocess.check_call('fly -t concourse sync'.split())
 
-    existing_pipelines = subprocess.check_output('fly -t conda-concourse-server ps'.split())
+    existing_pipelines = subprocess.check_output('fly -t concourse ps'.split())
     if hasattr(existing_pipelines, 'decode'):
         existing_pipelines = existing_pipelines.decode()
     existing_pipelines = [line.split()[0] for line in existing_pipelines.splitlines()[1:]]
@@ -965,7 +965,7 @@ def rm_pipeline(pipeline_names, config_root_dir, do_it_dammit=False, pass_throug
     if do_it_dammit or confirmation == 'y':
         # remove the specified pipelines
         for pipeline_name in pipelines_to_remove:
-            subprocess.check_call(['fly', '-t', 'conda-concourse-server',
+            subprocess.check_call(['fly', '-t', 'concourse',
                                 'dp', '-np', pipeline_name])
     else:
         print("aborted")
